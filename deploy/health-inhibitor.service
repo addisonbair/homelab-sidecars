@@ -1,0 +1,31 @@
+[Unit]
+Description=Homelab Health Inhibitor
+Documentation=https://github.com/addisonbair/homelab-sidecars
+After=network-online.target local-fs.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/health-inhibitor \
+    -raid-arrays=md0 \
+    -jellyfin-url=http://localhost:8096 \
+    -jellyfin-key-file=/etc/homelab/jellyfin-api-key \
+    -interval=30s \
+    -check-timeout=10s
+Restart=always
+RestartSec=10
+
+# Resource limits
+MemoryMax=64M
+CPUQuota=5%
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+PrivateTmp=true
+ReadOnlyPaths=/proc/mdstat
+ReadOnlyPaths=/etc/homelab
+
+[Install]
+WantedBy=multi-user.target
