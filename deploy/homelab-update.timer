@@ -1,0 +1,13 @@
+[Unit]
+Description=Homelab System Update Timer
+Documentation=https://github.com/addisonbair/homelab-sidecars
+
+[Timer]
+# Run at 4am daily (after 3am backup)
+OnCalendar=*-*-* 04:00:00
+# Add some randomization to avoid thundering herd
+RandomizedDelaySec=300
+Persistent=true
+
+[Install]
+WantedBy=timers.target

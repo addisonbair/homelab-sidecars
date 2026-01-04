@@ -1,0 +1,24 @@
+[Unit]
+Description=Homelab System Update
+Documentation=https://github.com/addisonbair/homelab-sidecars
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+
+# Check for and apply updates, then reboot
+# systemctl reboot will block if any inhibitors are held
+ExecStart=/bin/bash -c '\
+    echo "Checking for updates..."; \
+    if bootc upgrade --check 2>&1 | grep -q "No changes"; then \
+        echo "No updates available"; \
+        exit 0; \
+    fi; \
+    echo "Applying updates..."; \
+    bootc upgrade --apply && \
+    echo "Updates applied, rebooting..." && \
+    systemctl reboot'
+
+# Give time for the reboot
+TimeoutStartSec=600

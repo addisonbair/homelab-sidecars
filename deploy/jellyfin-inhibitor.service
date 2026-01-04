@@ -1,0 +1,23 @@
+[Unit]
+Description=Jellyfin Streaming Inhibitor
+Documentation=https://github.com/addisonbair/homelab-sidecars
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/jellyfin-inhibitor \
+    -url=http://localhost:8096 \
+    -api-key-file=/etc/homelab/jellyfin-api-key \
+    -interval=30s
+Restart=always
+RestartSec=10
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
