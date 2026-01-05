@@ -102,6 +102,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: Containerfile
           target: jellyfin-sidecar
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:jellyfin
@@ -112,6 +113,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: Containerfile
           target: qbittorrent-sidecar
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:qbittorrent
@@ -122,6 +124,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: Containerfile
           target: raid-sidecar
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:raid
