@@ -1,22 +1,20 @@
-.PHONY: all build test clean health-check health-inhibitor lint
+.PHONY: all build test clean lint
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
 BUILD_TIME ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 LDFLAGS := -ldflags "-s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT)"
 
-# Output directory
 BIN := bin
+
+SIDECARS := jellyfin-sidecar transmission-sidecar raid-sidecar
 
 all: build
 
-build: health-check health-inhibitor
+build: $(SIDECARS)
 
-health-check:
-	CGO_ENABLED=0 go build $(LDFLAGS) -o $(BIN)/health-check ./cmd/health-check
-
-health-inhibitor:
-	CGO_ENABLED=0 go build $(LDFLAGS) -o $(BIN)/health-inhibitor ./cmd/health-inhibitor
+$(SIDECARS):
+	CGO_ENABLED=0 go build $(LDFLAGS) -o $(BIN)/$@ ./cmd/$@
 
 test:
 	go test -v -race ./...
@@ -32,12 +30,6 @@ lint:
 clean:
 	rm -rf $(BIN)/ coverage.out coverage.html
 
-# Install to system (for local development)
-install: build
-	sudo cp $(BIN)/health-check /usr/local/bin/
-	sudo cp $(BIN)/health-inhibitor /usr/local/bin/
-
 # Cross-compile for container builds
 build-linux:
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -o $(BIN)/health-check ./cmd/health-check
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -o $(BIN)/health-inhibitor ./cmd/health-inhibitor
+	$(foreach sidecar,$(SIDECARS),GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -o $(BIN)/$(sidecar) ./cmd/$(sidecar);)
