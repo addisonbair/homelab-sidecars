@@ -35,6 +35,7 @@ func main() {
 	// Jellyfin flags
 	jellyfinURL := flag.String("jellyfin-url", "", "Jellyfin URL (skip if empty)")
 	jellyfinKeyFile := flag.String("jellyfin-key-file", "", "Path to Jellyfin API key file")
+	jellyfinGrace := flag.Duration("jellyfin-grace", 5*time.Minute, "Grace period after last stream before allowing reboot")
 
 	flag.Parse()
 
@@ -59,8 +60,8 @@ func main() {
 		}
 		apiKey := strings.TrimSpace(string(keyData))
 		client := jellyfin.NewClient(*jellyfinURL, apiKey, 5*time.Second)
-		checks = append(checks, jellyfin.NewChecker(client))
-		log.Printf("Enabled Jellyfin check at %s", *jellyfinURL)
+		checks = append(checks, jellyfin.NewChecker(client, *jellyfinGrace))
+		log.Printf("Enabled Jellyfin check at %s (grace=%s)", *jellyfinURL, *jellyfinGrace)
 	}
 
 	if len(checks) == 0 {

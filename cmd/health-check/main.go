@@ -52,6 +52,7 @@ func main() {
 	}
 
 	// Jellyfin check (if configured)
+	// Note: grace period is 0 for one-shot checks (stateless)
 	if *jellyfinURL != "" && *jellyfinKeyFile != "" {
 		keyData, err := os.ReadFile(*jellyfinKeyFile)
 		if err != nil {
@@ -59,7 +60,7 @@ func main() {
 		} else {
 			apiKey := strings.TrimSpace(string(keyData))
 			client := jellyfin.NewClient(*jellyfinURL, apiKey, 5*time.Second)
-			checks = append(checks, jellyfin.NewChecker(client))
+			checks = append(checks, jellyfin.NewChecker(client, 0))
 		}
 	}
 
