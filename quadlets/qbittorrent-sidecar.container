@@ -1,0 +1,21 @@
+[Unit]
+Description=qBittorrent Sidecar - Prevents shutdown during downloads
+After=qbittorrent.service
+BindsTo=qbittorrent.service
+
+[Container]
+Image=ghcr.io/addisonbair/homelab-sidecars:qbittorrent
+ContainerName=qbittorrent-sidecar
+Pod=vpn.pod
+Environment=QBITTORRENT_URL=http://localhost:8080
+Environment=POLL_INTERVAL=30s
+Environment=INHIBIT_WHAT=shutdown
+Volume=/run/dbus/system_bus_socket:/run/dbus/system_bus_socket:ro
+SecurityLabelDisable=true
+
+[Service]
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

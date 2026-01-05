@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   test:
     name: Test
@@ -63,11 +67,63 @@ jobs:
 
       - name: Build binaries
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/health-check ./cmd/health-check
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/health-inhibitor ./cmd/health-inhibitor
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/jellyfin-sidecar ./cmd/jellyfin-sidecar
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/qbittorrent-sidecar ./cmd/qbittorrent-sidecar
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o bin/raid-sidecar ./cmd/raid-sidecar
 
       - name: Upload binaries
         uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: bin/
+
+  container:
+    name: Build Container Images
+    runs-on: ubuntu-latest
+    needs: [test, lint, build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push jellyfin-sidecar
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: jellyfin-sidecar
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:jellyfin
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push qbittorrent-sidecar
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: qbittorrent-sidecar
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:qbittorrent
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push raid-sidecar
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: raid-sidecar
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:raid
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
