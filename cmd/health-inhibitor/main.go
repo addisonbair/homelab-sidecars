@@ -56,12 +56,13 @@ func main() {
 	if *jellyfinURL != "" && *jellyfinKeyFile != "" {
 		keyData, err := os.ReadFile(*jellyfinKeyFile)
 		if err != nil {
-			log.Fatalf("Cannot read Jellyfin key file: %v", err)
+			log.Printf("Warning: cannot read Jellyfin key file: %v (Jellyfin check disabled)", err)
+		} else {
+			apiKey := strings.TrimSpace(string(keyData))
+			client := jellyfin.NewClient(*jellyfinURL, apiKey, 5*time.Second)
+			checks = append(checks, jellyfin.NewChecker(client, *jellyfinGrace))
+			log.Printf("Enabled Jellyfin check at %s (grace=%s)", *jellyfinURL, *jellyfinGrace)
 		}
-		apiKey := strings.TrimSpace(string(keyData))
-		client := jellyfin.NewClient(*jellyfinURL, apiKey, 5*time.Second)
-		checks = append(checks, jellyfin.NewChecker(client, *jellyfinGrace))
-		log.Printf("Enabled Jellyfin check at %s (grace=%s)", *jellyfinURL, *jellyfinGrace)
 	}
 
 	if len(checks) == 0 {
