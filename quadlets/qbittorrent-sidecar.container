@@ -7,10 +7,10 @@ BindsTo=qbittorrent.service
 Image=ghcr.io/addisonbair/homelab-sidecars:qbittorrent
 ContainerName=qbittorrent-sidecar
 Pod=vpn.pod
-Environment=QBITTORRENT_URL=http://localhost:8080
+Environment=QBITTORRENT_URL=http://127.0.0.1:8080
 Environment=POLL_INTERVAL=30s
 Environment=INHIBIT_WHAT=shutdown
-Volume=/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket:ro
+Volume=/run/dbus:/var/run/dbus:ro
 SecurityLabelDisable=true
 
 [Service]

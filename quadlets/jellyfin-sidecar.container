@@ -12,7 +12,7 @@ Environment=JELLYFIN_API_KEY_FILE=/secrets/jellyfin-api-key
 Environment=JELLYFIN_GRACE_PERIOD=5m
 Environment=POLL_INTERVAL=30s
 Environment=INHIBIT_WHAT=shutdown:sleep
-Volume=/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket:ro
+Volume=/run/dbus:/var/run/dbus:ro
 Volume=/etc/homelab:/secrets:ro,z
 SecurityLabelDisable=true
 
