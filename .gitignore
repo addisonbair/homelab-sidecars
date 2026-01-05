@@ -1,2 +1,5 @@
 bin/
 *.sidecar
+jellyfin-sidecar
+qbittorrent-sidecar
+raid-sidecar
