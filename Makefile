@@ -7,7 +7,7 @@ LDFLAGS := -ldflags "-s -w -X main.version=$(VERSION) -X main.commit=$(COMMIT)"
 
 BIN := bin
 
-SIDECARS := jellyfin-sidecar transmission-sidecar raid-sidecar
+SIDECARS := jellyfin-sidecar qbittorrent-sidecar raid-sidecar
 
 all: build
 
