@@ -26,7 +26,7 @@ func main() {
 
 	// Inhibitor flags
 	inhibitorWho := flag.String("inhibitor-who", "health-inhibitor", "Inhibitor 'who' field")
-	inhibitorWhat := flag.String("inhibitor-what", "shutdown:reboot", "What to inhibit")
+	inhibitorWhat := flag.String("inhibitor-what", "shutdown", "What to inhibit (shutdown covers reboot too)")
 
 	// RAID flags
 	raidArrays := flag.String("raid-arrays", "", "Comma-separated RAID arrays to check (e.g., md0,md1)")
