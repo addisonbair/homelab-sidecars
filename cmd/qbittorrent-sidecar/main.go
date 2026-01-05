@@ -18,10 +18,11 @@ func main() {
 	jar, _ := cookiejar.New(nil)
 
 	checker := &qbittorrentChecker{
-		url:      requireEnv("QBITTORRENT_URL"),
-		username: getEnv("QBITTORRENT_USERNAME", ""),
-		password: getEnv("QBITTORRENT_PASSWORD", ""),
-		client:   &http.Client{Timeout: 10 * time.Second, Jar: jar},
+		url:          requireEnv("QBITTORRENT_URL"),
+		username:     getEnv("QBITTORRENT_USERNAME", ""),
+		password:     getEnv("QBITTORRENT_PASSWORD", ""),
+		client:       &http.Client{Timeout: 10 * time.Second, Jar: jar},
+		etaThreshold: getDuration("ETA_THRESHOLD", 5*time.Minute),
 	}
 
 	sidecar.MustRun(context.Background(), checker, sidecar.Options{
@@ -33,11 +34,12 @@ func main() {
 }
 
 type qbittorrentChecker struct {
-	url      string
-	username string
-	password string
-	client   *http.Client
-	loggedIn bool
+	url          string
+	username     string
+	password     string
+	client       *http.Client
+	loggedIn     bool
+	etaThreshold time.Duration
 }
 
 func (c *qbittorrentChecker) Name() string {
@@ -98,22 +100,25 @@ func (c *qbittorrentChecker) Check(ctx context.Context) (bool, string, error) {
 		Name     string  `json:"name"`
 		Progress float64 `json:"progress"`
 		State    string  `json:"state"`
+		ETA      int     `json:"eta"` // seconds, 8640000 = unknown
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&torrents); err != nil {
 		return false, "", nil
 	}
 
-	var downloading []string
+	// Only inhibit for torrents finishing soon (within ETA threshold)
+	thresholdSecs := int(c.etaThreshold.Seconds())
+	var finishing []string
 	for _, t := range torrents {
-		if t.Progress < 1.0 {
-			downloading = append(downloading,
-				fmt.Sprintf("%s (%.0f%%)", t.Name, t.Progress*100))
+		if t.Progress < 1.0 && t.ETA > 0 && t.ETA <= thresholdSecs {
+			finishing = append(finishing,
+				fmt.Sprintf("%s (%.0f%%, %ds)", t.Name, t.Progress*100, t.ETA))
 		}
 	}
 
-	if len(downloading) > 0 {
-		return true, fmt.Sprintf("downloading: %s", strings.Join(downloading, ", ")), nil
+	if len(finishing) > 0 {
+		return true, fmt.Sprintf("finishing soon: %s", strings.Join(finishing, ", ")), nil
 	}
 
 	return false, "", nil
